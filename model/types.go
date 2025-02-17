@@ -118,6 +118,7 @@ type Relation struct {
 type Option struct {
 	Timestamps  bool `json:"timestamps,omitempty"`   // + created_at, updated_at 字段
 	SoftDeletes bool `json:"soft_deletes,omitempty"` // + deleted_at 字段
+	DataRule    bool `json:"data_rule,omitempty"`    // + user_id + department_id 字段
 	Trackings   bool `json:"trackings,omitempty"`    // + created_by, updated_by, deleted_by 字段
 	Constraints bool `json:"constraints,omitempty"`  // + 约束定义
 	Permission  bool `json:"permission,omitempty"`   // + __permission 字段

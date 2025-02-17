@@ -66,6 +66,43 @@ func LoadSource(source []byte, id string, file string) (*Model, error) {
 	uniqueColumns := []*Column{}    // 唯一字段清单
 
 	// 补充字段(软删除)
+	if mod.MetaData.Option.DataRule {
+		mod.MetaData.Columns = append(mod.MetaData.Columns,
+			Column{
+				Label:    "::User",
+				Name:     "user_id",
+				Type:     "integer",
+				Comment:  "::User",
+				Nullable: true,
+				Index:    true,
+			},
+			Column{
+				Label:    "::Department",
+				Name:     "department_id",
+				Type:     "integer",
+				Comment:  "::Department",
+				Nullable: true,
+				Index:    true,
+			},
+		)
+		if mod.MetaData.Relations == nil {
+			mod.MetaData.Relations = make(map[string]Relation)
+		}
+		mod.MetaData.Relations["user"] = Relation{
+			Type:    "hasOne",
+			Model:   "admin.user",
+			Key:     "id",
+			Foreign: "user_id",
+		}
+		mod.MetaData.Relations["department"] = Relation{
+			Type:    "hasOne",
+			Model:   "admin.department",
+			Key:     "id",
+			Foreign: "department_id",
+		}
+	}
+
+	// 补充字段(软删除)
 	if mod.MetaData.Option.SoftDeletes {
 		mod.MetaData.Columns = append(mod.MetaData.Columns, Column{
 			Label:    "::Delete At",

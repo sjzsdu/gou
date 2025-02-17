@@ -10,7 +10,7 @@ import (
 	"github.com/yaoapp/kun/log"
 )
 
-const reURLWhereStr = "(where|orwhere|wherein|orwherein)\\.(.+)\\.(eq|gt|lt|ge|le|like|match|in|null|notnull)[\\[]*[\\]]*"
+const reURLWhereStr = "(where|orwhere|wherein|orwherein)\\.(.+)\\.(eq|gt|lt|ge|le|like|match|in|null|notnull|jsoncontains)[\\[]*[\\]]*"
 
 var reURLWhere = regexp.MustCompile("^" + reURLWhereStr + "$")
 var reURLGroupWhere = regexp.MustCompile("^group\\.([a-zA-Z_]{1}[0-9a-zA-Z_]+)\\." + reURLWhereStr + "$")

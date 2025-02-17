@@ -14,7 +14,7 @@ import (
 var Managers = map[string]Manager{}
 
 // Timeout 默认有效时间
-var Timeout time.Duration = 3600 * time.Second
+var Timeout time.Duration = 36000 * time.Second
 
 // Name 默认为会话管理器
 var Name string = "buntdb"

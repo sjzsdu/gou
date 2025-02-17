@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/yaoapp/xun/capsule"
@@ -369,6 +371,18 @@ func (param QueryParam) Where(where QueryWhere, qb query.Query, mod *Model) {
 				where.Value = strings.Split(value, ",")
 			}
 			qb.WhereIn(column, where.Value)
+			break
+		case "jsoncontains":
+			if value, ok := where.Value.(string); ok {
+				num, err := strconv.Atoi(value)
+				var sql string
+				if err != nil {
+					sql = fmt.Sprintf("json_contains(%s, '\"%s\"')", column, value)
+				} else {
+					sql = fmt.Sprintf("json_contains(%s, '%d')", column, num)
+				}
+				qb.WhereRaw(sql)
+			}
 			break
 		default:
 			op, has := opmap[where.OP]
