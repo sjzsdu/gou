@@ -34,6 +34,11 @@ type Share struct {
 	Global map[string]interface{}
 }
 
+// Valuer is the interface for the value
+type Valuer interface {
+	JsValue(ctx *v8go.Context) (*v8go.Value, error)
+}
+
 // Undefined jsValue  Undefined
 var Undefined UndefinedT = 0x00
 
@@ -163,6 +168,7 @@ func GoValues(jsValues []*v8go.Value, ctx *v8go.Context) ([]interface{}, error) 
 // * | ✅ | io.WriteCloser          | object(external)          |
 // * | ✅ | *gin.Context            | object(external)          |
 // * | ✅ | *gin.ResponseWriter     | object(external)          |
+// * | ✅ | bridge.Valuer           | custom value interface     |
 // * |-----------------------------------------------------------
 func JsValue(ctx *v8go.Context, value interface{}) (*v8go.Value, error) {
 
@@ -171,6 +177,10 @@ func JsValue(ctx *v8go.Context, value interface{}) (*v8go.Value, error) {
 	}
 
 	switch v := value.(type) {
+
+	// Custom value interface
+	case Valuer:
+		return v.JsValue(ctx)
 
 	case string, int32, uint32, bool, *big.Int, float64:
 		return v8go.NewValue(ctx.Isolate(), v)
@@ -227,8 +237,8 @@ func JsValue(ctx *v8go.Context, value interface{}) (*v8go.Value, error) {
 	case UndefinedT:
 		return v8go.Undefined(ctx.Isolate()), nil
 
-	// For io stream
-	case io.Writer, io.Reader, io.ReadCloser, io.WriteCloser, gin.ResponseWriter, *gin.Context:
+	// For share value
+	case io.Writer, io.Reader, io.ReadCloser, io.WriteCloser, gin.ResponseWriter:
 		return v8go.NewExternal(ctx.Isolate(), v)
 
 	default:
@@ -364,6 +374,15 @@ func GoValue(value *v8go.Value, ctx *v8go.Context) (interface{}, error) {
 	// Map, Array etc.
 	var goValue interface{}
 	return goValueParse(value, goValue)
+}
+
+// Unmarshal cast javascript value to golang value
+func Unmarshal(value *v8go.Value, v interface{}) error {
+	data, err := value.MarshalJSON()
+	if err != nil {
+		return err
+	}
+	return jsoniter.Unmarshal(data, v)
 }
 
 func goValueParse(value *v8go.Value, v interface{}) (interface{}, error) {

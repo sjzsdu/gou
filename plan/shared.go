@@ -13,6 +13,17 @@ type MemorySharedSpace struct {
 	subMu       sync.RWMutex
 }
 
+// Space interface
+type Space interface {
+	Set(key string, value interface{}) error
+	Get(key string) (interface{}, error)
+	Delete(key string) error
+	Clear() error
+	ClearNotify() error
+	Subscribe(key string, callback func(key string, value interface{})) error
+	Unsubscribe(key string) error
+}
+
 // NewMemorySharedSpace creates a new MemorySharedSpace instance
 func NewMemorySharedSpace() *MemorySharedSpace {
 	return &MemorySharedSpace{
@@ -31,7 +42,7 @@ func (m *MemorySharedSpace) Set(key string, value interface{}) error {
 	m.subMu.RLock()
 	if callbacks, exists := m.subscribers[key]; exists {
 		for _, callback := range callbacks {
-			go callback(key, value)
+			callback(key, value)
 		}
 	}
 	m.subMu.RUnlock()
@@ -61,16 +72,15 @@ func (m *MemorySharedSpace) Delete(key string) error {
 	m.subMu.RLock()
 	if callbacks, exists := m.subscribers[key]; exists {
 		for _, callback := range callbacks {
-			go callback(key, nil)
+			callback(key, nil)
 		}
 	}
 	m.subMu.RUnlock()
-
 	return nil
 }
 
-// Clear removes all values from the shared space
-func (m *MemorySharedSpace) Clear() error {
+// ClearNotify removes all values from the shared space and notifies subscribers
+func (m *MemorySharedSpace) ClearNotify() error {
 	m.mu.Lock()
 	m.data = make(map[string]interface{})
 	m.mu.Unlock()
@@ -79,11 +89,18 @@ func (m *MemorySharedSpace) Clear() error {
 	m.subMu.RLock()
 	for key, callbacks := range m.subscribers {
 		for _, callback := range callbacks {
-			go callback(key, nil)
+			callback(key, nil)
 		}
 	}
 	m.subMu.RUnlock()
+	return nil
+}
 
+// Clear removes all values from the shared space
+func (m *MemorySharedSpace) Clear() error {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	m.data = make(map[string]interface{})
 	return nil
 }
 
